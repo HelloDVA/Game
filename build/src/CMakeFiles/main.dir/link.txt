@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic CMakeFiles/main.dir/main.o -o /home/hello/Documents/Game/bin/main  -Wl,-rpath,/home/hello/Documents/Game/build/src/server:/home/hello/Documents/Game/build/src/database:/home/hello/Documents/Game/build/src/network:/home/hello/Documents/Game/build/src/utils server/libserver.so database/libdatabase.so network/libnetwork.so utils/libutils.so 
