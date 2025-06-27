@@ -27,16 +27,16 @@ Server::Server(){
 	main_reactor = std::make_unique<EventLoop>();
     Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "main reactor is created");
 
-
+    // create acceptor for main_reactor
     acceptor = std::make_unique<Acceptor>(main_reactor.get());
     Log::getlog() -> WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "Acceptor ready");
-
     std::function<void(int)> cb = std::bind(&Server::ConnectNew, this, std::placeholders::_1);
     acceptor -> setnewconnectioncallback(cb);
-
+    
+    // make subreactor
     for(int i = 0; i < THREADPOOLSIZE; i ++){
 		std::unique_ptr<EventLoop> subreactor = std::make_unique<EventLoop>();
-		reactors.push_back(std::move(subreactor));
+		sub_reactors_.push_back(std::move(subreactor));
 	}
     Log::getlog() -> WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "subreactors ready");
     
@@ -57,6 +57,10 @@ Server::Server(){
 Server::~Server(){}
 
 void Server::Start(){
+    for(int i = 0; i < sub_reactors_.size(); i ++){
+        std::function<void()> func = std::bind(&EventLoop::Loop, sub_reactors_[i].get());
+        threadpool -> Add(std::move(func));
+	}
     Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "server start");
 	main_reactor->Loop();
 }
@@ -65,15 +69,11 @@ void Server::Start(){
 // subreactor is used to create connection
 // add subreactor loop function to threadpool
 void Server::ConnectNew(int client_fd){
-     int number = client_fd % reactors.size(); 
-	 std::unique_ptr<Connection> connection = std::make_unique<Connection>(reactors[number].get(), client_fd);
-
-     std::function<void()> func = std::bind(&EventLoop::Loop, reactors[number].get());
-     threadpool -> Add(std::move(func));
-    
+    // random find a subreactor for new connection
+     int number = client_fd % sub_reactors_.size(); 
+	 std::unique_ptr<Connection> connection = std::make_unique<Connection>(sub_reactors_[number].get(), client_fd);
      std::function<void(int client_fd)> callback = std::bind(&Server::DeleteConnection, this, std::placeholders::_1);
       connection -> setdeletecallback(callback);
-
 	  connections[client_fd] = std::move(connection);
 }
 

@@ -5,7 +5,7 @@
 
 class Socket{
     private:
-        int fd;
+        int fd_;
     public:
         Socket();
         Socket(int _fd);

@@ -46,8 +46,6 @@ bool Game::GameMove(std::string game_request){
 		std::string game_response = response_json.dump();	
 		player1_->getwebconnection()->DoWrite(game_response); 
 		player2_->getwebconnection()->DoWrite(game_response); 
-		player1_->getwebconnection()->Close();
-		player2_->getwebconnection()->Close();
 		return false;
 	}
 }

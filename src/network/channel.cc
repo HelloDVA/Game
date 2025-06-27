@@ -1,63 +1,67 @@
 #include"channel.h"
 #include"eventloop.h"
 
-Channel::Channel(EventLoop *_loop, int _fd, bool _usethreadpool){
-    loop = _loop;
-    fd = _fd;
-    events = 0;
-    revents = 0;
-    inepoll =  false;
-    usethreadpool = _usethreadpool;
+Channel::Channel(EventLoop *loop, int fd){
+    loop_ = loop;
+    fd_ = fd;
+    listen_events_ = 0;
+    ready_events_ = 0;
+    exist_ =false;
 }
 
 Channel::~Channel(){
-	if(inepoll)
-		loop->DeleteChannel(this);
+	loop_->DeleteChannel(this);
 }
 
-void Channel::setevents(uint32_t _events){
-    events = _events;
+
+void Channel::set_listen_events(uint32_t events){
+    listen_events_ = events;
 }
 
-void Channel::setrevents(uint32_t _revents){
-    revents = _revents;
+void Channel::set_ready_events(uint32_t events){
+    ready_events_ = events;
 }
 
 int Channel::getfd(){
-    return fd;    
+    return fd_;    
 }
 
-uint32_t Channel::getevents(){
-   return events; 
+
+void Channel::set_read_callback(std::function<void()> callback){
+    read_callback_ = callback;
 }
 
-uint32_t Channel::getrevents(){
-   return revents; 
+void Channel::set_write_callback(std::function<void()> callback){
+    write_callback_ = callback;
 }
 
-void Channel::setfunction(std::function<void()> _callback){
-    callback = _callback;
+void Channel::set_exist(bool exist){
+    exist_ =exist;
 }
 
-void Channel::setinepoll(bool _inepoll){
-    inepoll = _inepoll;
-}
-
-bool Channel::getinepoll(){
-    return inepoll;    
+bool Channel::get_exist(){
+    return exist_;    
 }
 
 void Channel::EnableRead(){
-   events = EPOLLIN | EPOLLPRI;
-   loop -> UpdateChannel(this);    
+   listen_events_ = EPOLLIN | EPOLLPRI;
+   loop_ -> UpdateChannel(this);    
 } 
 
 void Channel::EnableET(){
-   events |= EPOLLET;
-   loop -> UpdateChannel(this);    
+   listen_events_ |= EPOLLET;
+   loop_ -> UpdateChannel(this);    
 } 
 
 void Channel::HandleEvent(){
-        callback();
+    if (ready_events_ & EPOLLIN) {
+        read_callback_();
+    }
+    if (ready_events_ & EPOLLOUT) {
+        write_callback_();
+    }
 }
 
+uint32_t Channel::get_listen_events(){
+    return listen_events_;
+}

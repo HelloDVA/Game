@@ -29,7 +29,7 @@ class Connection{
         std::unique_ptr<Channel> connection_channel;
 		std::unique_ptr<HttpRequest> request_;
 		std::unique_ptr<HttpResponse> response_;
-        std::unique_ptr<Buffer> buffer;
+        std::unique_ptr<Buffer> buffer_;
 
         std::shared_ptr<WebSocketSession> webconnection_;
 		std::shared_ptr<GameMatch> match_;
@@ -45,8 +45,12 @@ class Connection{
 
         void setdeletecallback(std::function<void(int fd)> callback);
 		
-        void Echo(int fd);
 		void HttpConnection();
+        void HttpWrite();
+        void HttpRead();
+        void HttpProcess();
+        void WebSocketProcess();
+
         void BindGame(std::shared_ptr<Game> game, int game_role);
 
         WebSocketSession* getwebconnection();

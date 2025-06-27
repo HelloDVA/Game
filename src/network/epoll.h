@@ -8,8 +8,8 @@ class Channel;
 class Epoll
 {
     public:
-        int epollfd;
-        struct epoll_event *events;
+        int fd_;
+        struct epoll_event *events_;
 
     public:
         Epoll();

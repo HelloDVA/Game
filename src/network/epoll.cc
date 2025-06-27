@@ -1,81 +1,78 @@
-#include<iostream>
+#include"../utils/log.h"
+
+#include <sys/epoll.h>
 #include<unistd.h>
 
-#include"../utils/log.h"
 #include"epoll.h"
 #include"channel.h"
 
-
-#define MAX_EVENTS 100
+#define MAX_EVENTS 1000
 
 Epoll::Epoll(){
-   epollfd = epoll_create1(0);
+   fd_ = epoll_create1(0);
 
-   if(epollfd == -1){
+   if(fd_ == -1){
         Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll create error");
 		exit(1);
    }
    else
         Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "epoll create");
 
-   events = new epoll_event[MAX_EVENTS];
-   memset(events, 0, sizeof(events) * MAX_EVENTS);
+   events_ = new epoll_event[MAX_EVENTS];
+   memset(events_, 0, sizeof(epoll_event) * MAX_EVENTS);
 }
 
 Epoll::~Epoll(){
-    if(epollfd == -1)
-        close(epollfd);
-    delete []events;
+    if(fd_ == -1)
+        close(fd_);
+    delete []events_;
 }
 
 void Epoll::UpdateChannel(Channel *ch){
     int fd = ch->getfd();
     struct epoll_event ev{};
-    ev.events = ch->getevents();
+    ev.events = ch->get_listen_events();
     ev.data.ptr = ch;
-    if(!ch->getinepoll()){
-        if((epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &ev)) == -1){
+
+    if (!ch->get_exist()) {
+        if((epoll_ctl(fd_, EPOLL_CTL_ADD, fd, &ev)) == -1)
             Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll add event error");
-        } else{
+        else{
             Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "epoll add event");    
-            ch -> setinepoll(true);
+            ch -> set_exist(true);
         }
-    } else{
-        if((epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &ev)) == -1){
+    } else {
+        if((epoll_ctl(fd_, EPOLL_CTL_MOD, fd, &ev)) == -1)
             Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll mod event error");
-        } else{
+        else
             Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "epoll mod event");
-        }
     }
 }
 
 void Epoll::DeleteChannel(Channel *ch){
-	if(ch->getinepoll()){
-		int fd = ch->getfd();	
-    	if((epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, nullptr)) == -1){
-           	Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll delete event error");
-        } else{
-			ch->setinepoll(false);
-        	Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "epoll delete event");
-		}
+	int fd = ch->getfd();	
+   	if((epoll_ctl(fd_, EPOLL_CTL_DEL, fd, nullptr)) == -1){
+       	Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll delete event error");
+    } else{
+		ch->set_exist(false);
+       	Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "epoll delete event");
 	}
 }
 
 std::vector<Channel*> Epoll::Poll(){
 
-    int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1); 
-    std::vector<Channel*> channel_active;
+    int nfds = epoll_wait(fd_, events_, MAX_EVENTS, -1); 
+    std::vector<Channel*> active_channels;
 
 	// if epoll gets nothing return
     if(nfds == -1){
-            	Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll wait error");
-		return channel_active;
+       	Log::getlog()->WriteLog(LOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, "epoll wait error");
+		return active_channels;
     }
-
-    for(int i = 0; i < nfds; i ++){
-        Channel *ch = (Channel*) events[i].data.ptr;
-        ch->setrevents(events[i].events);
-        channel_active.push_back(ch);
+    for (int i = 0; i < nfds; ++i) {
+        Channel *ch = (Channel *)events_[i].data.ptr;
+        ch->set_ready_events(events_[i].events);
+        active_channels.push_back(ch);
     }
-    return channel_active;
+     return active_channels;
 }

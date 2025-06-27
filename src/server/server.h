@@ -18,7 +18,7 @@ class Server
         std::unique_ptr<Acceptor> acceptor;
         std::unique_ptr<ThreadPool> threadpool;
 
-        std::vector<std::unique_ptr<EventLoop>> reactors;
+        std::vector<std::unique_ptr<EventLoop>> sub_reactors_;
         std::unordered_map<int, std::unique_ptr<Connection>> connections;
 
     public:
