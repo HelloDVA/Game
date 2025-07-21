@@ -24,6 +24,10 @@ asio::io_context WebSocketSession::ioc_;
 // create main_reactor subreactors, Acceptor and ThreadPool 
 // use main_reactor create Acceptor. Acceptor will let server get new connections
 Server::Server(){
+    // crate log
+    Log::getlog();
+    Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "log is created");
+
 	main_reactor = std::make_unique<EventLoop>();
     Log::getlog()->WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "main reactor is created");
 
@@ -54,7 +58,10 @@ Server::Server(){
     Log::getlog() -> WriteLog(LOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, "DatabasePool ready");
 }
 
-Server::~Server(){}
+Server::~Server(){
+    ConnectionPool::getinstance().ClosePool();
+    Log::getlog()->CloseLog();
+}
 
 void Server::Start(){
     for(int i = 0; i < sub_reactors_.size(); i ++){

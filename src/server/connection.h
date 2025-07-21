@@ -34,7 +34,7 @@ class Connection{
         std::shared_ptr<WebSocketSession> webconnection_;
 		std::shared_ptr<GameMatch> match_;
         int game_role_;
-        std::shared_ptr<Game> game_;
+        std::weak_ptr<Game> game_;
         std::function<void(int fd)> deletecallback;
 
         ConnectionState state = HTTP;
@@ -51,7 +51,7 @@ class Connection{
         void HttpProcess();
         void WebSocketProcess();
 
-        void BindGame(std::shared_ptr<Game> game, int game_role);
+        void BindGame(std::weak_ptr<Game> game, int game_role);
 
         WebSocketSession* getwebconnection();
 };

@@ -49,6 +49,7 @@ void HttpResponse::MakeLoginResponse(std::string path, std::string version, std:
     path_ = RESOURCE_DIR + path + ".html";
 
 	ParseUrl(body_);
+	// ConnectionPool init in server
 	MYSQL* conn = ConnectionPool::getinstance().GetConnection();
 	
 	std::string username = url_data_["username"];
@@ -72,6 +73,7 @@ void HttpResponse::MakeLoginResponse(std::string path, std::string version, std:
 	}
 	else
 		MakeErrorResponse(401, version);		
+	// return connection to connectionpool
 	database.Close();
 }
 

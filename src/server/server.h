@@ -9,6 +9,7 @@ class Acceptor;
 class Connection;
 class Socket;
 class ThreadPool;
+class ConnectionPool;
 
 class Server
 {
@@ -19,6 +20,7 @@ class Server
         std::unique_ptr<ThreadPool> threadpool;
 
         std::vector<std::unique_ptr<EventLoop>> sub_reactors_;
+
         std::unordered_map<int, std::unique_ptr<Connection>> connections;
 
     public:

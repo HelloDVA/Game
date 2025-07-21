@@ -10,6 +10,21 @@ ConnectionPool& ConnectionPool::getinstance(){
 	return instance;
 }
 
+
+void ConnectionPool::init(std::string &host, std::string &user, std::string &password, std::string &dbname, int poolsize){
+	host_ = host;
+	user_ = user;
+	password_ = password;
+	dbname_ = dbname;
+	port_ = 3306;
+	poolsize_ = poolsize;
+	for(int i = 1; i <= poolsize; i ++){
+		MYSQL* conn = createNewConnection();
+		if(conn)
+			pool_.push(conn);
+	}
+}
+
 MYSQL* ConnectionPool::createNewConnection(){
 	MYSQL* conn = mysql_init(nullptr);
 	if(!conn){
@@ -27,20 +42,6 @@ MYSQL* ConnectionPool::createNewConnection(){
 		return nullptr;
 	}
 	return conn;
-}
-
-void ConnectionPool::init(std::string &host, std::string &user, std::string &password, std::string &dbname, int poolsize){
-	host_ = host;
-	user_ = user;
-	password_ = password;
-	dbname_ = dbname;
-	port_ = 3306;
-	poolsize_ = poolsize;
-	for(int i = 1; i <= poolsize; i ++){
-		MYSQL* conn = createNewConnection();
-		if(conn)
-			pool_.push(conn);
-	}
 }
 
 MYSQL* ConnectionPool::GetConnection(){

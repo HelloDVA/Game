@@ -20,7 +20,7 @@ class ConnectionPool{
 
 	private:
 		ConnectionPool() = default;
-		~ConnectionPool(){ClosePool();}
+		~ConnectionPool(){}
 		ConnectionPool(const ConnectionPool&) = delete;
 		ConnectionPool& operator =(const ConnectionPool&) = delete;
 

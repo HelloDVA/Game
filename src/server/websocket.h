@@ -21,6 +21,7 @@ using tcp = asio::ip::tcp;
 class WebSocketSession {
 public:
     WebSocketSession(int client_fd);
+    ~WebSocketSession();
     void run(std::string request_data);
 
     std::string DoRead();

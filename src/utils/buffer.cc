@@ -4,6 +4,7 @@
 Buffer::Buffer(){}
 Buffer::~Buffer(){
     buffer.clear();
+    buffer.shrink_to_fit();
 }
 
 void Buffer::Append(const char *_str, int _size){
@@ -19,10 +20,6 @@ ssize_t Buffer::Size(){
 
 const char* Buffer::Cstr(){
     return buffer.c_str();
-}
-
-void Buffer::Clean(){
-    buffer.clear();
 }
 
 std::string Buffer::getbuffer(){

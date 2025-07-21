@@ -11,7 +11,6 @@ std::string Log::log_buffer;
 Log::Log(){
     init(LOG_LEVEL_NONE, LOG_TYPE_CONSOLE);
 }
-Log::~Log(){}
 
 void Log::init(LOG_LEVEL log_level, LOG_TYPE log_type){
     log_level_ = log_level;
@@ -87,5 +86,12 @@ const char* Log::GetLevelToString(LOG_LEVEL log_level){
             return "FATAL";
         default:
             return "NONE";
+    }
+}
+
+void Log::CloseLog(){
+    if(log != NULL){
+        delete log;
+        log = NULL;
     }
 }

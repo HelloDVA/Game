@@ -53,6 +53,7 @@ Connection::Connection(EventLoop *_loop, int _fd){
 }
 
 Connection::~Connection(){
+	
 }
 
 void Connection::HttpRead() {
@@ -160,11 +161,17 @@ void Connection::WebSocketProcess(){
 					
 	// game start
  	bool game_state = true; 
-	std::string game_request = webconnection_->DoRead(); 
-	while (game_-> GameMove(game_request)) { 
-		
+
+	// game start
+	while (game_state) { 
 		std::string game_request = webconnection_->DoRead(); 
-	}
+		if (auto game = game_.lock()) {  // 尝试提升为 shared_ptr
+			// 对象仍然存在，可以使用
+			game_state = game_-> GameMove(game_request);
+		} else {
+			webconnection_->Close();
+		} 
+	} 
 	webconnection_->Close();
 }
 

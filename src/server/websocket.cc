@@ -9,6 +9,10 @@ WebSocketSession::WebSocketSession(int client_fd)
         beast::get_lowest_layer(ws_).assign(tcp::v4(), client_fd);
 }
 
+WebSocketSession::~WebSocketSession() {
+    
+}
+
 void WebSocketSession::run(std::string request_data) {
         try {
             http::request_parser<http::string_body> parser;
@@ -45,6 +49,7 @@ void WebSocketSession::DoWrite(std::string msg){
     }
 }
 
+// display close the connection 
 void WebSocketSession::Close(){
     ws_.close(beast::websocket::close_code::normal);
     std::cout << "the websocket is close normal" << std::endl;
