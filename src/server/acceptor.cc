@@ -4,6 +4,7 @@
 #include"../utils/log.h"
 
 #include<fcntl.h>
+#include <memory>
 
 #include"acceptor.h"
 
@@ -18,7 +19,7 @@ Acceptor::Acceptor(EventLoop *_loop){
     socket -> Bind("127.0.0.1", 8081);
     socket -> Listen();
 
-    accept_channel = std::make_unique<Channel>(loop, socket -> getfd());
+    accept_channel = std::make_shared<Channel>(loop, socket -> getfd());
     std::function<void()> callback = std::bind(&Acceptor::AcceptConnection,this);
     accept_channel -> set_read_callback(callback);
     accept_channel -> EnableRead();

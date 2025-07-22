@@ -10,7 +10,6 @@ Channel::Channel(EventLoop *loop, int fd){
 }
 
 Channel::~Channel(){
-	loop_->DeleteChannel(this);
 }
 
 
@@ -45,12 +44,12 @@ bool Channel::get_exist(){
 
 void Channel::EnableRead(){
    listen_events_ = EPOLLIN | EPOLLPRI;
-   loop_ -> UpdateChannel(this);    
+   loop_ -> UpdateChannel(shared_from_this());    
 } 
 
 void Channel::EnableET(){
    listen_events_ |= EPOLLET;
-   loop_ -> UpdateChannel(this);    
+   loop_ -> UpdateChannel(shared_from_this());    
 } 
 
 void Channel::HandleEvent(){
@@ -64,4 +63,8 @@ void Channel::HandleEvent(){
 
 uint32_t Channel::get_listen_events(){
     return listen_events_;
+}
+
+void Channel::Disable() {
+    loop_->DeleteChannel(shared_from_this());
 }

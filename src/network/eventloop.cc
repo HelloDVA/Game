@@ -2,6 +2,7 @@
 #include"channel.h"
 #include"epoll.h"
 
+#include <memory>
 #include<vector>
 #include<thread>
 #include <iostream>
@@ -17,19 +18,21 @@ EventLoop::~EventLoop(){}
 // run the active task's HandleEvent 
 void EventLoop::Loop() {
     while (true) {
-        std::vector<Channel*> channel_active = epoll->Poll();
+        std::vector<std::weak_ptr<Channel>> channels_active = epoll->Poll();
         std::cout << "Working Current thread id: " << std::this_thread::get_id() << std::endl; 
-        int length = channel_active.size();
+        int length = channels_active.size();
+
         for(int i = 0; i < length; i ++){
-			channel_active[i] -> HandleEvent();
+            if (auto channel_active = channels_active[i].lock())
+    			channel_active -> HandleEvent();
 		}
     }
 }
 
-void EventLoop::UpdateChannel(Channel *ch){
-   epoll->UpdateChannel(ch); 
+void EventLoop::UpdateChannel(std::shared_ptr<Channel> ch) {
+    epoll->UpdateChannel(ch); 
 }
 
-void EventLoop::DeleteChannel(Channel *ch){
-	epoll -> DeleteChannel(ch);
+void EventLoop::DeleteChannel(std::shared_ptr<Channel> ch) {
+    epoll -> DeleteChannel(ch);
 }

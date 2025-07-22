@@ -13,7 +13,7 @@ class Acceptor{
 
         //use and possess
         std::unique_ptr<Socket> socket;
-        std::unique_ptr<Channel> accept_channel;
+        std::shared_ptr<Channel> accept_channel;
         
         std::function<void(int)> newconnectioncallback;
 

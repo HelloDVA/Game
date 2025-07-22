@@ -12,6 +12,8 @@ Log::Log(){
     init(LOG_LEVEL_NONE, LOG_TYPE_CONSOLE);
 }
 
+Log::~Log() {}
+
 void Log::init(LOG_LEVEL log_level, LOG_TYPE log_type){
     log_level_ = log_level;
     log_type_ = log_type;
@@ -95,3 +97,4 @@ void Log::CloseLog(){
         log = NULL;
     }
 }
+

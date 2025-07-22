@@ -17,6 +17,6 @@ class EventLoop
 
         void Loop();
 
-        void UpdateChannel(Channel* ch);
-		void DeleteChannel(Channel* ch);
+        void UpdateChannel(std::shared_ptr<Channel> ch);
+		void DeleteChannel(std::shared_ptr<Channel> ch);
 };

@@ -33,7 +33,7 @@ Connection::Connection(EventLoop *_loop, int _fd){
 	client_socket = std::make_unique<Socket>(_fd);
 	client_socket->SetNonBlocking();
 
-    connection_channel = std::make_unique<Channel>(loop, _fd);
+    connection_channel = std::make_shared<Channel>(loop, _fd);
 
     std::function<void()> read_cb = std::bind(&Connection::HttpRead, this); 
     std::function<void()> write_cb = std::bind(&Connection::HttpWrite, this); 
@@ -53,7 +53,8 @@ Connection::Connection(EventLoop *_loop, int _fd){
 }
 
 Connection::~Connection(){
-	
+	// before close channel disalbe it from epoll
+	connection_channel->Disable();
 }
 
 void Connection::HttpRead() {
@@ -64,15 +65,16 @@ void Connection::HttpRead() {
 
         if (read_state > 0) {
 			buffer_->Append(read_buffer, read_state); 
-//			std::cout << buffer_->Cstr() << std::endl;
 		} else if (read_state == -1 && errno ==EINTR) {
 			continue;	
         } else if (read_state == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 			std::cout << "data read is ok +++++++++++++++++++++++++++" << std::endl;
+			std::cout << buffer_->Cstr() << std::endl;
 			HttpProcess();
 			buffer_->Clean();
 			break;
         } else if (read_state == 0) {
+			std::cout << "close the connection" << std::endl;
 			deletecallback(client_socket->getfd()); 
 			std::cout << "client out\n";
 			break;
@@ -167,7 +169,7 @@ void Connection::WebSocketProcess(){
 		std::string game_request = webconnection_->DoRead(); 
 		if (auto game = game_.lock()) {  // 尝试提升为 shared_ptr
 			// 对象仍然存在，可以使用
-			game_state = game_-> GameMove(game_request);
+			game_state = game-> GameMove(game_request);
 		} else {
 			webconnection_->Close();
 		} 

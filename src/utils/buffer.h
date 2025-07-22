@@ -14,6 +14,6 @@ class Buffer
         ssize_t Size();
         const char *Cstr();
 		std::string getbuffer();
-
+        void Clean();
 
 };

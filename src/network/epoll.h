@@ -1,4 +1,6 @@
 #pragma once
+#include <memory>
+#include <unordered_map>
 #include<vector>
 #include<sys/epoll.h>
 #include<string.h>
@@ -15,7 +17,10 @@ class Epoll
         Epoll();
         ~Epoll();
 
-        std::vector<Channel*> Poll();
-        void UpdateChannel(Channel *ch);
-		void DeleteChannel(Channel *ch);
+        std::vector<std::weak_ptr<Channel>> Poll();
+        void UpdateChannel(std::shared_ptr<Channel> ch);
+		void DeleteChannel(std::shared_ptr<Channel> ch);
+
+    private:
+        std::unordered_map<int, std::shared_ptr<Channel>> channel_map_;
 };

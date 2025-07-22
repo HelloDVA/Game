@@ -26,7 +26,7 @@ class Connection{
 
         //use and possess
 		std::unique_ptr<Socket> client_socket;
-        std::unique_ptr<Channel> connection_channel;
+        std::shared_ptr<Channel> connection_channel;
 		std::unique_ptr<HttpRequest> request_;
 		std::unique_ptr<HttpResponse> response_;
         std::unique_ptr<Buffer> buffer_;
@@ -51,7 +51,7 @@ class Connection{
         void HttpProcess();
         void WebSocketProcess();
 
-        void BindGame(std::weak_ptr<Game> game, int game_role);
+        void BindGame(std::shared_ptr<Game> game, int game_role);
 
         WebSocketSession* getwebconnection();
 };

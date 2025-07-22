@@ -25,3 +25,7 @@ const char* Buffer::Cstr(){
 std::string Buffer::getbuffer(){
 	return buffer;
 }
+
+void Buffer::Clean() {
+    buffer.clear();
+}

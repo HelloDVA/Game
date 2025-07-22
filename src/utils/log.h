@@ -28,12 +28,13 @@ class Log{
     private:
         // In singleton partten the constrctor is private
         Log();
+        void init(LOG_LEVEL log_level, LOG_TYPE log_type);
+
         ~Log();
+
 		Log(const Log &log) = delete;
 		Log& operator=(const Log &log) = delete;
 
-        void init(LOG_LEVEL log_level, LOG_TYPE log_type);
-        
         // tools
         std::string GetCurrentTime();
         const char* GetLevelToString(LOG_LEVEL log_level);
