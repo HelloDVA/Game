@@ -1,9 +1,9 @@
-#include<sstream>
-#include <iostream>
-
-#include"httprequest.h"
 #include"../utils/buffer.h"
 #include"../utils/log.h"
+
+#include<sstream>
+
+#include"httprequest.h"
 
 
 HttpRequest::HttpRequest(){}
@@ -22,8 +22,8 @@ bool HttpRequest::Parse(Buffer* buffer){
     std::istringstream line_stream(line);
     line_stream >> method_ >> path_ >> version_;
 
-    if(path_ == " " || path_ == "/")
-        path_ = "/login";
+    /* if(path_ == " " || path_ == "/") */
+    /*     path_ = "/login"; */
 
     // process the request header
     while(std::getline(request_stream, line) && line != "\r"){

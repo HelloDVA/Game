@@ -74,7 +74,6 @@ void Connection::HttpRead() {
 			buffer_->Clean();
 			break;
         } else if (read_state == 0) {
-			std::cout << "close the connection" << std::endl;
 			deletecallback(client_socket->getfd()); 
 			std::cout << "client out\n";
 			break;
@@ -83,29 +82,9 @@ void Connection::HttpRead() {
 			break;
         } 
    	}
-
-        /* if (read_state > 0) { */
-			/* buffer_->Append(read_buffer, read_state); */ 
-        /* } else if (read_state == 0) { */
-			/* deletecallback(client_socket->getfd()); */ 
-			/* std::cout << "client out\n"; */
-			/* break; */
-        /* } else { */
-        /*     if (errno == EAGAIN || errno == EWOULDBLOCK) { */
-			/* //	HttpProcess(); */
-				/* buffer_->Clean(); */
-        /* 	} else if (errno == EINTR) { */
-        /*     	// 被信号中断，继续读取 */
-        /*     	continue; */
-        /* 	} else { */
-        /*     	// 出错 */
-        /*     	//std::cout << "read error" << std::endl; */
-        /* 	} */
-    	/* } */
 }
 
 void Connection::HttpProcess(){
-//	std::cout << std::endl << "test in connection 52\n"  << buffer->Cstr() << std::endl;
 	if (request_->Parse(buffer_.get())) {
 		std::string path = request_->getpath();
 		std::string method = request_->getmethod();
@@ -123,9 +102,14 @@ void Connection::HttpProcess(){
 		}
 
 		if (method == "GET") {
-			response_->MakeGetResponse(path, version,  body);
-			response_message = response_->ToString();
+			if (path == "/") {
+				response_message = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+			} else {
+				response_->MakeGetResponse(path, version,  body);
+				response_message = response_->ToString();
+			}
 		}
+		std::cout << response_message << std::endl;
 		send(client_socket->getfd(), response_message.c_str(), response_message.size(), 0);
 	} else {
 		response_->MakeErrorResponse(404, request_->getversion());

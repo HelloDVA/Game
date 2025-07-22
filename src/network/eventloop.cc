@@ -4,8 +4,6 @@
 
 #include <memory>
 #include<vector>
-#include<thread>
-#include <iostream>
 
 EventLoop::EventLoop(){
     epoll = std::make_unique<Epoll>();
@@ -19,7 +17,6 @@ EventLoop::~EventLoop(){}
 void EventLoop::Loop() {
     while (true) {
         std::vector<std::weak_ptr<Channel>> channels_active = epoll->Poll();
-        std::cout << "Working Current thread id: " << std::this_thread::get_id() << std::endl; 
         int length = channels_active.size();
 
         for(int i = 0; i < length; i ++){
