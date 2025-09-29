@@ -62,3 +62,11 @@ void GomokuServer::OnMessage(const TcpConnectionPtr& conn, Buffer* buffer) {
         }
     }
 }
+
+void GomokuServer::OnConnection(const TcpConnectionPtr& conn) {
+
+}
+
+void GomokuServer::OnClose() {
+
+}
