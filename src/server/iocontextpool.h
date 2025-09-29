@@ -5,8 +5,6 @@
 #include <memory>
 #include <thread>
 
-// class::IoContextPool
-// This an io_context pool. 
 class IoContextPool {
     public: 
         explicit IoContextPool(std::size_t size) : next_io_context_(0) {

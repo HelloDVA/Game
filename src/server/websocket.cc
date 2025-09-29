@@ -1,7 +1,8 @@
 
+#include <boost/asio/strand.hpp>
+
 #include "websocket.h"
 #include "gamemanager.h"
-#include <boost/asio/strand.hpp>
 
 namespace http = beast::http;
 namespace net = boost::asio;
@@ -21,8 +22,6 @@ void WebSocketSession::Start(std::string request_data) {
     parser.put(net::buffer(request_data), ec);
     http::request<http::string_body> req = parser.release();
 
-    // 异步接受 WebSocket 握手
-    // when accept websocket, move client to the match queue
     ws_.async_accept(req ,[self = shared_from_this()](boost::system::error_code ec) {
         if (ec) {
             std::cerr << "Handshake failed: " << ec.message() << std::endl;
@@ -65,7 +64,7 @@ void WebSocketSession::DoWrite(std::string msg) {
     std::cout << "write: " << msg << std::endl;
 
     boost::asio::post(
-            strand_, // 确保写操作串行执行
+            strand_, 
             [self = shared_from_this(), msg = std::move(msg)] {
                 // When the queue is not empty, there is writing.
                 bool write_in_progress = !self->write_msgs_.empty();
@@ -77,8 +76,8 @@ void WebSocketSession::DoWrite(std::string msg) {
     );
 }
 
-void WebSocketSession::DoWriteNext() {
-    ws_.text(true); // 文本帧
+void WebSocketSession::DoWriteNext() { 
+    ws_.text(true); 
     ws_.async_write(
         boost::asio::buffer(write_msgs_.front()),
         boost::asio::bind_executor(
@@ -103,7 +102,6 @@ void WebSocketSession::OnWrite(boost::system::error_code ec, std::size_t ) {
 }
 
 void WebSocketSession::Close() {
-    // 优雅关闭 WebSocket 连接
     ws_.async_close(websocket::close_code::normal,
     [self = shared_from_this()](boost::system::error_code ec) {
         if (ec) {

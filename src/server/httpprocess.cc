@@ -1,6 +1,10 @@
+#include "../database/connectionpool.h"
+#include "../database/database.h"
+
 #include <sstream>
 #include <fstream>
 #include <regex>
+#include <string>
 
 #include "httpprocess.h"
 #include "httprequest.h"
@@ -12,7 +16,7 @@ HttpResponse HttpProcess::Process(const HttpRequest& request) {
     std::string method = request.getmethod();
     std::string path = request.getpath(); 
 
-    // get http information and choose action.
+    // Get http information and choose action.
     if (method == "GET") {
         return HandleGet(request);
     }
@@ -50,7 +54,6 @@ HttpResponse HttpProcess::Process(const HttpRequest& request) {
 }
 
 HttpResponse HttpProcess::HandleLogin(const HttpRequest& request) {
-    // Httresponse prepare.
     HttpResponse response;
     response.setversion(request.getversion());
     response.setheader("Connection", "keep-alive");
@@ -59,31 +62,32 @@ HttpResponse HttpProcess::HandleLogin(const HttpRequest& request) {
     ParseUser(request.getbody());
 
 	// get user information from database.
-	/* MYSQL* conn = ConnectionPool::getinstance().GetConnection(); */
-	/* std::string username = url_data_["username"]; */
-	/* std::string userpwd; */
-	/* std::string query = "SELECT * FROM user WHERE username = '" + username + "'"; */
-	/* Database database(conn); */
-	/* Database::Result rows_result = database.Query(query); */
-	/* if(rows_result.empty()){ */
-	/* 	MakeErrorResponse(500, version_); */
-	/* } */
-	/* Database::Row row = database.Query(query).front(); */
-    
-    // vrity password
-	if(user_data_["password"] == "123321"){
-        // login successful, make session.
-        std::string body = "/wzq";
-        response.setbody(body);
-        response.setstatus(200);
-	}
-	else {
-        response.setstatus(401);
+	MYSQL* conn = ConnectionPool::getinstance().GetConnection();
+
+	std::string username = user_data_["username"];
+	std::string userpwd;
+	std::string query = "SELECT * FROM user WHERE username = '" + username + "'";
+
+	Database database(conn);
+	Database::Result rows_result = database.Query(query);
+
+	if(rows_result.empty()){
+        response.setstatus(500);
+	} else {
+        Database::Row row = database.Query(query).front();
+        if(user_data_["password"] == row["password"]){
+            std::string body = "/wzq";
+            response.setheader("Content-Length", std::to_string(body.size()));
+            response.setbody(body);
+            response.setstatus(200);
+        }
+        else
+            response.setstatus(401);
     }
 
+	database.Close();
+
     return response;
-	// return connection to connectionpool
-	//database.Close();
 }
 
 void HttpProcess::ParseUser(const std::string& body) {

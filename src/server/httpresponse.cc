@@ -24,6 +24,20 @@ std::string HttpResponse::ToString() const {
     return response.str();
 }
 
+bool HttpResponse::EndsWith(const std::string& str, const std::string& suffix) {
+    if (suffix.size() > str.size()) return false;
+    return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+std::string HttpResponse::GetMimeType(const std::string& path) {
+    if (EndsWith(path, ".html")) return "text/html";
+    if (EndsWith(path, ".css")) return "text/css";
+    if (EndsWith(path, ".js")) return "application/javascript";
+    if (EndsWith(path, ".png")) return "image/png";
+    if (EndsWith(path, ".jpg") || EndsWith(path, ".jpeg")) return "image/jpeg";
+    if (EndsWith(path, ".ico")) return "image/x-icon";
+    return "application/octet-stream";
+}
 
 /* HttpResponse& HttpResponse::SetCookie(const std::string& name, const std::string& value, int max_age) { */
 /*     std::stringstream ss; */
@@ -43,21 +57,4 @@ std::string HttpResponse::ToString() const {
 /*     SetContentType(GetMimeType(filepath)); */
 /*     return *this; */
 /* } */
-
-bool HttpResponse::EndsWith(const std::string& str, const std::string& suffix) {
-    if (suffix.size() > str.size()) return false;
-    return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
-std::string HttpResponse::GetMimeType(const std::string& path) {
-    if (EndsWith(path, ".html")) return "text/html";
-    if (EndsWith(path, ".css")) return "text/css";
-    if (EndsWith(path, ".js")) return "application/javascript";
-    if (EndsWith(path, ".png")) return "image/png";
-    if (EndsWith(path, ".jpg") || EndsWith(path, ".jpeg")) return "image/jpeg";
-    if (EndsWith(path, ".ico")) return "image/x-icon";
-    return "application/octet-stream";
-}
-
-
 

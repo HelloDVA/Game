@@ -1,10 +1,10 @@
 #include "../utils/buffer.h"
 
-#include "httpparser.h"
-#include "httprequest.h"
-
 #include <algorithm>
 #include <string_view>
+
+#include "httpparser.h"
+#include "httprequest.h"
 
 bool HttpParser::Parse(Buffer& input_buffer, HttpRequest& request) {
   	while (state_ != kParseDone && state_ != kParseError) {
@@ -81,22 +81,23 @@ bool HttpParser::Parse(Buffer& input_buffer, HttpRequest& request) {
   return false;
 }
 
-// 示例请求行: "GET /index.html HTTP/1.1\r\n"
 bool HttpParser::ParseRequestLine(const char* start, const char* end, HttpRequest& request) {
-	// find first space
+	// 示例请求行: "GET /index.html HTTP/1.1\r\n"
+	
+	// Find first space.
 	const char* space = std::find(start, end, ' ');
 	if (space == end)
 		return false;
 	request.setmethod(std::string(start, space));	
 	
-	// find the second space
+	// Find the second space.
 	start = space + 1;
 	space = std::find(start, end, ' ');
 	if (space == end)
 		return false;
 	request.setpath(std::string(start, space));	
 	
-	// the last data and confirm HTTP/
+	// The last data and confirm HTTP/.
 	start = space + 1;
 	if (std::string_view(start, 5) != "HTTP/")
 		return false;

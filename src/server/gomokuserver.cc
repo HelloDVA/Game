@@ -1,8 +1,8 @@
 #include "../network/tcpserver.h"
 #include "../network/eventloop.h"
 #include "../network/inetaddress.h"
-
 #include <boost/asio/io_context.hpp>
+
 #include <memory>
 
 #include "gomokuserver.h"
@@ -12,8 +12,6 @@
 #include "websocket.h"
 #include "httpparser.h"
 #include "iocontextpool.h"
-
-namespace net = boost::asio;
 
 GomokuServer::GomokuServer(EventLoop* loop, const InetAddress& addr) 
     : server_(std::make_unique<TcpServer>(loop, addr)),
@@ -64,10 +62,3 @@ void GomokuServer::OnMessage(const TcpConnectionPtr& conn, Buffer* buffer) {
         }
     }
 }
-
-void GomokuServer::OnConnection(const TcpConnectionPtr&) {
-
-}
-
-
-

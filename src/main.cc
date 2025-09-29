@@ -29,25 +29,4 @@ int main()
     // Start main-loop.
     loop.Loop();
     return 0;
-
-
-    // bench test code
-    /* TcpServer server(&loop, addr); */
-    /* server.setmessagecallback(Test); */
-    /* server.Start(); */
-    /* std::cout << "main 33 server start\n"; */
-    
-    // session test code
-    /* SessionManager session_manager; */
-    /* std::string user_id = "1729778076"; */    
-
-    /* std::cout << "redis connected" << std::endl; */
-
-    /* std::string session_id = session_manager.CreateSession(user_id); */
-    
-    /* std::cout << session_id << std::endl; */
-
-    /* nlohmann::json session_data = session_manager.GetSession(session_id); */
-    
-    /* std::cout << session_data["user_id"] << std::endl; */
 }

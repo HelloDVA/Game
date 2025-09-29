@@ -67,9 +67,7 @@ void GameManager::HandleMessage(std::string& message, std::shared_ptr<WebSocketS
 }
 
 void GameManager::JoinMatch(std::shared_ptr<WebSocketSession> player) {
-    // match_queue needs lock before use
-    // empty add new player
-    // two players in queue, start a game
+    // Empty add new player, two players in queue, start a game.
     if(match_queue.empty()) {
         std::lock_guard<std::mutex> lock(mutex_);
         match_queue.emplace(player);
@@ -87,11 +85,11 @@ void GameManager::JoinMatch(std::shared_ptr<WebSocketSession> player) {
             rooms_[roomid_] = std::make_shared<GameSession>(player, player_o);
         }
         
-        // send game information to client
+        // Send game information to client.
         player->DoWrite(MakeStartMessage(roomid_, -1));
         player_o->DoWrite(MakeStartMessage(roomid_, 1));
         
-        // change the room id
+        // Change the room id.
         roomid_.fetch_add(1, std::memory_order_relaxed); 
    }
 }

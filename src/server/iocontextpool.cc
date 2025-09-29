@@ -1,7 +1,5 @@
 
-
 #include "iocontextpool.h"
-
 
 void IoContextPool::Start() {
     for (auto& ctx : io_contexts_) {

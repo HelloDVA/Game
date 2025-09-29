@@ -1,14 +1,10 @@
 
-
 #include <memory>
 
 #include "game.h"
 
 class WebSocketSession;
 
-// class GameSession
-//
-// This means a game, handle the move action.
 class GameSession {
     public: 
         GameSession(std::shared_ptr<WebSocketSession> player1, std::shared_ptr<WebSocketSession> player2)
