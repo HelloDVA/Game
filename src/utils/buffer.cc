@@ -11,7 +11,9 @@
 #include "buffer.h"
 
 size_t Buffer::ReadFd(int fd, int* saved_errno) {
-    // use two data area and use readv
+    *saved_errno = 0;
+
+    // Use two data area and use readv.
     char extrabuff[65536];
     const size_t writer_able = WriteableBytes();
 
@@ -22,16 +24,20 @@ size_t Buffer::ReadFd(int fd, int* saved_errno) {
     vec[1].iov_base = extrabuff;
     vec[1].iov_len = sizeof(extrabuff);
 
-    const size_t n = readv(fd, vec, 2);
+    const ssize_t n = readv(fd, vec, 2);
 
-    if (n < 0)
-        saved_errno = &errno;
-    else if (n < writer_able) 
+    if (n < 0) {
+        *saved_errno = errno;
+    } else if (n == 0) {
+        return 0;
+    } else if (n <= writer_able) {
         writer_index_ += n;
-    else {
+    } else {
+        // The data bigger than output buffer, append extrabuff data to output buffer.
         writer_index_ = buffer_.size(); 
-        Append(extrabuff, n - writer_index_);
+        Append(extrabuff, n - writer_able);
     }
+
     return n;
 }
 
@@ -50,7 +56,7 @@ void Buffer::Append(const char* data, size_t len) {
 }
 
 void Buffer::MakeSpace(size_t len) {
-    // move data or make new space
+    // Move read aleady data or make new space.
     if (PrependableBytes() + WriteableBytes() < len + kCheapPrepend)  
         buffer_.resize(writer_index_ + len);
     else {

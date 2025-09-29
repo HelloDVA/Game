@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-#include <iostream>
+#include <sys/epoll.h>
 
 #include "eventloop.h"
 
@@ -17,10 +17,10 @@ public:
     Channel(EventLoop* loop, int fd);
     ~Channel();
     
-    // 
     void HandleEvent();
     
     // Control functions.
+    void EnableET() { events_ |= EPOLLET; Update();}
     void EnableReading() { events_ |= kReadEvent; Update(); }
     void DisableReading() { events_ &= ~kReadEvent; Update(); }
     void EnableWriting() { events_ |= kWriteEvent; Update(); }
@@ -61,3 +61,4 @@ private:
     EventCallback write_callback_;
     EventCallback close_callback_;
 };
+

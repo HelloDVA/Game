@@ -117,33 +117,34 @@
         <div id="board"></div>
     </div>
     
-    <button id="robot">五子棋</button>
-    <button id="start">开始</button>
+    <button id="robot">人机对战</button>
+    <button id="start">匹配对战</button>
     <!--<button id="restart">重新开始</button>-->
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // document elements 
-    		const board = document.getElementById('board');
-    		const statusDisplay = document.getElementById('status');
-    		//const restartButton = document.getElementById('restart');
-    		const startButton = document.getElementById('start');
+            const board = document.getElementById('board');
+            const statusDisplay = document.getElementById('status');
+            const startButton = document.getElementById('start');
             const robotButton = document.getElementById('robot');
-    
-            // game information
-    		const boardSize = 15;       // 15x15的棋盘
-            var currentState = 0;       // player turn
-            var currentPlayer = 0;      // player role number
-            var roomid = 0;
-    		var gameState = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
-    		var gameActive = true;
 
-            var ws = null;
+    		const boardSize = 15;       // 15 15
+            let currentPlayer = 0;        // -1:black, 1:white
+            let currentState = false;      // true = 当前轮到玩家走
+            let gameActive = false;
+            let ai_mode = false;
+            let roomid = 0;
+            let boardState = [];
+            let ws = null;
+   
+    		//var boardState = Array(boardSize).fill().map(() => Array(boardSize).fill(null));    // board position initivaltive is 0.
+
 
    		    // 初始化棋盘
     		function initializeBoard() {
+
         		board.innerHTML = '';
-        		gameState = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+        		boardState = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
         
         		for (let i = 0; i < boardSize; i++) {
             			for (let j = 0; j < boardSize; j++) {
@@ -157,139 +158,99 @@
         		}
     		}
 
+            // 显示/隐藏按钮
+            function showButtons(show) {
+                startButton.style.display = show ? "inline-block" : "none";
+                robotButton.style.display = show ? "inline-block" : "none";
+            }
+
             function placeStone(row, col, player) {
-                gameState[row][col] = player;
-                currentColor = player == -1 ? 'black' : 'white';
+                boardState[row][col] = player;
+                color = player == -1 ? 'black' : 'white';
                 const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                 const stone = document.createElement('div');
-                stone.classList.add('stone', currentColor);
+                stone.classList.add('stone', color);
                 cell.appendChild(stone);
             }
 
-            function handleCellClick(e){
-                if (!gameActive) return;
 
-                if (!currentState) return;
-                
+            function handleCellClick(e){
+                if (!gameActive || !currentState) return;
+
                 const row = parseInt(e.target.dataset.row);
                 const col = parseInt(e.target.dataset.col);
                 
                 // 如果该位置已有棋子，则不能落子
-                if (gameState[row][col] !== null){
+                if (boardState[row][col] !== null){
                     alert("不能落子");
                     return;
                 }
-                var gamedata = {
-                    "type" : "move",
-                    "roomid" : roomid,
-                    "x" : row,
-                    "y" : col,
-                    "role" : currentPlayer
+
+                // Send message according the game mode.
+                const gamedata = {
+                    type: ai_mode ? "ai" : "move",
+                    roomid,
+                    x: row,
+                    y: col,
+                    role: currentPlayer
                 };
-                console.log(gamedata);
+                    
                 ws.send(JSON.stringify(gamedata));
-                currentState = 0;
+                
+                // Switch the turn.
+                currentState = false;
             }
+
     
-            function startGame() {
-				startButton.style.display = "none";	
-                robotButton.style.display = "none";
+            function startGame(mode) {
+                ai_mode = mode === 'robot';
+                showButtons(false); 
+
+                if (ws && ws.readyState === WebSocket.OPEN) return;
 
                 ws = new WebSocket('ws://localhost:8081');
 
                 ws.onopen = function() {
                     alert("Matching");
-                    var gamedata = {
-                        "type" : "match"
-                    };
+                    const gamedata = { type: ai_mode ? "robot" : "match" };
                     ws.send(JSON.stringify(gamedata));
-                }
-                
+                };
+
                 ws.onmessage = function(event) {
                     console.log(event.data);
+
                     const msg = JSON.parse(event.data);
 
                     if(msg.type == "start"){
                         alert("Match Found"); 
-                        if(msg.role == -1){
-                            alert("black! your first.");
-                            currentState = 1;
-                            statusDisplay.innerHTML = "黑方";
-                        }
-                        else{ 
-                            alert("white!");
-                            currentState = 0;
-                            statusDisplay.innerHTML = "白方";
-                        }
+
                         currentPlayer = msg.role;
                         roomid = msg.roomid;
+
+                        currentState = currentPlayer === -1; // 黑方先手
+                        statusDisplay.innerHTML = currentPlayer === -1 ? "黑方" : "白方";
                         initializeBoard();
+                        gameActive = true;
                     } else if(msg.type == "move"){
+                        // After place, the currentPlayer turn is close.
                         placeStone(msg.x, msg.y, msg.role);
+
+                        // If the other is ok, open the turn.
                         if(msg.role != currentPlayer) {
-                            currentState = 1;
+                            currentState = true;
                         }
                     } else if(msg.type == "end"){
-                        console.log(currentPlayer);
-                        if(msg.winner == currentPlayer){ 
-                            statusDisplay.innerHTML = "winner winner chichen dinner !";
-                        } else { 
-                            statusDisplay.innerHTML = "the lose is tempoary !";
-                        }
+                        placeStone(msg.x, msg.y, msg.role);
+                        statusDisplay.innerHTML = msg.winner === currentPlayer 
+                            ? "winner winner chicken dinner!" 
+                            : "the lose is temporary!";
                         gameActive = false;
+                        showButtons(true);
                     }
                 }
             }
-
-            function startRobot() {
-				startButton.style.display = "none";	
-                robotButton.style.display = "none";
-
-                ws = new WebSocket('ws://localhost:8081');
-
-                ws.onopen = function() {
-                    alert("The Robot is Warming Up! Please Waitting!");
-                    var gamedata = {
-                        "type" : "robot"
-                    };
-                    ws.send(JSON.stringify(gamedata));
-                }
-                
-                ws.onmessage = function(event){
-                    console.log(event.data);
-                    const msg = JSON.parse(event.data);
-
-                    if(msg.type == "start"){
-                        alert("OK! black! your first."); 
-                        currentPlayer = msg.role;
-                        currentState = 1;
-                        statusDisplay.innerHTML = "黑方";
-                        roomid = msg.roomid;
-                        initializeBoard();
-                    } else if(msg.type == "move"){
-                        // get message and place stone
-                        placeStone(msg.x, msg.y, msg.role); 
-                        // process ok and send ai move
-                        var gamedata = {
-                            "type" : "ai",
-                            "roomid" : roomid,
-                        };
-                        ws.send(JSON.stringify(gamedata));
-                    } else if (msg.type == "ai") {
-                        placeStone(msg.x, msg.y, msg.role); 
-                        currentState = 1;
-                    } else if(msg.type == "end"){
-                        placeStone(msg.x, msg.y, msg.role); 
-                        if(msg.role == currentPlayer)
-                            statusDisplay.innerHTML = "winner winner chichen dinner !";
-                        else 
-                            statusDisplay.innerHTML = "the lose is tempoary !";
-                        gameActive = false;
-                    }
-                }
-            }
-           	startButton.addEventListener('click', startGame);
-            robotButton.addEventListener('click', startRobot);
+            startButton.addEventListener('click', () => startGame('match'));
+            robotButton.addEventListener('click', () => startGame('robot'));
         });
 
             // 重新开始游戏

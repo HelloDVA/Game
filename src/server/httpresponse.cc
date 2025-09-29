@@ -2,7 +2,6 @@
 
 #include"httpresponse.h"
 
-
 const std::map<int, std::string> HttpResponse::status_messages_ = {
     {200, "OK"},
     {301, "Moved Permanently"},

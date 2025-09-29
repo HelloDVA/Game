@@ -1,9 +1,6 @@
 #include "asynclogger.h"
 
-#include <cstdint>
 #include <memory>
-
-class AsyncLogger;
 
 // singel pattern
 class GlobalLogger {

@@ -26,6 +26,9 @@ class Acceptor {
         
         // Start listen and enable channel in epoll. 
         void Listen();
+        
+        // Stop listen and disable channel in epoll.
+        void ListenOff();
 
         void setnewconnectioncallback(std::function<void(int sockfd, const InetAddress& peer_addr)> callback) {
             newconnectioncallback_ = std::move(callback);

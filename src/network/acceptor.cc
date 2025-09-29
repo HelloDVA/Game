@@ -19,7 +19,7 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& addr)
 
 Acceptor::~Acceptor() {
     loop_->AssertInLoopThread();
-    acceptor_channel_->DisableAll();
+    acceptor_channel_->RemoveChannel();
     sockets::Close(acceptor_fd_);
 }
 
@@ -27,6 +27,11 @@ void Acceptor::Listen() {
     loop_->AssertInLoopThread();
     sockets::Listen(acceptor_fd_);
     acceptor_channel_->EnableReading();
+}
+
+void Acceptor::ListenOff() {
+    loop_->AssertInLoopThread();
+    acceptor_channel_->DisableAll();
 }
 
 void Acceptor::HandleRead() {

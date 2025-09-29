@@ -24,6 +24,8 @@ class EventLoopThreadPool {
         
         // Create thread, and use initcallback to process them.
         void Start(const ThreadInitCallback& cb = ThreadInitCallback());
+
+        void Stop();
         
         EventLoop* GetNextLoop();  
 
@@ -40,7 +42,4 @@ class EventLoopThreadPool {
         std::vector<std::unique_ptr<EventLoopThread>> threads_;
         std::vector<EventLoop*> loops_;
 };
-
-
-
 

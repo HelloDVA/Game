@@ -7,11 +7,13 @@
 #include <string_view>
 
 bool HttpParser::Parse(Buffer& input_buffer, HttpRequest& request) {
-  while (state_ != kParseDone && state_ != kParseError) {
+  	while (state_ != kParseDone && state_ != kParseError) {
+
+		// 数据不足，没找到请求行结束符
 		if (state_ == kParseRequestLine) {
 			const char* crlf = input_buffer.FindCRLF();
 			if (!crlf) {
-				return false; // 数据不足，没找到请求行结束符
+				return false; 
 			}
 
 			// 解析 Request Line
@@ -21,32 +23,48 @@ bool HttpParser::Parse(Buffer& input_buffer, HttpRequest& request) {
 				state_ = kParseError;
 				return false;
 			}
-			input_buffer.Retrieve(crlf + 2 - read_start); // 消耗掉已解析的数据
+
+			// 消耗掉已解析的数据,更改状态
+			input_buffer.Retrieve(crlf + 2 - read_start); 			
 			state_ = kParseHeaders;
+
 		} else if (state_ == kParseHeaders) {
+
+			// 数据不足，没找到下一行的结束符
 			const char* crlf = input_buffer.FindCRLF();
 			if (!crlf) {
-				return false; // 数据不足，没找到下一行的结束符
+				return false; 			
 			}
-
+			
+			// While loop 一行一行地处理请求头
 			const char* read_start = input_buffer.Peek();
-			if (crlf == read_start) { // 找到空行（连续的CRLF）
+
+			// 如果处理到了head的最后一行，判断是否处理好了。
+			// 否则调用函数进行处理。
+			if (crlf == read_start) { 
 				input_buffer.Retrieve(crlf + 2 - read_start);
+
 				// 检查头部，判断是否有Body（例如检查Content-Length）
+				// 没有Body，解析完成
 				if (request.getheader("Content-Length").empty()) {
-					state_ = kParseDone; // 没有Body，解析完成
+					state_ = kParseDone; 
 				} else {
 					body_length_ = std::stoi(request.getheader("Content-Length"));
 					state_ = kParseBody; // 有Body，进入Body解析状态
 				}
+
 			} else {
 				ParseHeaderLine(read_start, crlf, request);
 				input_buffer.Retrieve(crlf + 2 - read_start);
 			}
+
 		} else if (state_ == kParseBody) {
+
+			// Body数据还没收全
 			if (input_buffer.ReadableBytes() < body_length_) {
-				return false; // Body数据还没收全
+				return false; 
 			}
+
 			// 读取指定长度的Body数据
 			request.setbody(std::string(input_buffer.Peek(), body_length_));
 			input_buffer.Retrieve(body_length_);
@@ -59,6 +77,7 @@ bool HttpParser::Parse(Buffer& input_buffer, HttpRequest& request) {
 			return true;
 		}
 	}
+
   return false;
 }
 

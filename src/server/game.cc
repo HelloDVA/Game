@@ -1,11 +1,9 @@
 #include <random>
+#include <utility>
 
 #include "game.h"
 
 const int Game::directions_[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
-
-Game::Game() {
-}
 
 bool Game::MakeMove(int x, int y, int player) {
     board_[x][y] = player; 
@@ -51,6 +49,8 @@ std::pair<int, int> HardAI() {
 	// do action
 	
 	// return action
+	
+	return std::pair<int, int> {1, 2};
 }
 
 bool Game::CheckWin(int x, int y, int player) {
@@ -85,4 +85,3 @@ bool Game::CheckWin(int x, int y, int player) {
 	}
 	return false;
 }
- 

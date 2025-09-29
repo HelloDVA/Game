@@ -2,33 +2,11 @@
 #include "./network/tcpserver.h"
 #include "./network/eventloop.h"
 #include "./network/inetaddress.h"
-#include "./network/tcpconnection.h"
-#include "./utils/buffer.h"
 #include "./utils/globallogger.h"
 #include "./server/gomokuserver.h"
 #include "./server/sessionmanager.h"
 
 #include <string>
-#include <iostream>
-
-void Test(const TcpConnectionPtr& conn, Buffer* buffer) {
-    // Process the received data
-    std::string message(buffer->Peek(), buffer->ReadableBytes());
-    std::cout << "Received message: " << message << std::endl;
-    std::string http_response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Length: 12\r\n"
-        "Connection: Keep-Alive\r\n"
-        "Content-Type: text/plain\r\n"
-        "\r\n"
-        "Hello World!";
-
-    // Echo back to client
-    conn->Send(http_response);
-
-    // Clear the buffer
-    buffer->RetrieveAll();
-}
 
 int main() 
 {

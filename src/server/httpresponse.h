@@ -8,8 +8,8 @@
 
 class HttpResponse {
 public:
-    HttpResponse(); 
-    ~HttpResponse(); 
+    HttpResponse() {}; 
+    ~HttpResponse() {}; 
 
     std::string ToString() const;
 

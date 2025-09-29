@@ -1,13 +1,18 @@
 
-#include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
-
 #include "websocket.h"
 #include "gamemanager.h"
+#include <boost/asio/strand.hpp>
 
-using json = nlohmann::json;
+namespace http = beast::http;
+namespace net = boost::asio;
 
-WebSocketSession::WebSocketSession(tcp::socket socket) : ws_(std::move(socket)){}
+WebSocketSession::WebSocketSession(tcp::socket socket) 
+    : ws_(std::move(socket)),
+      strand_(net::make_strand(ws_.get_executor())) {}
+
+WebSocketSession::~WebSocketSession() {
+
+}
 
 void WebSocketSession::Start(std::string request_data) {
     http::request_parser<http::string_body> parser;
@@ -48,45 +53,52 @@ void WebSocketSession::OnRead(boost::system::error_code ec, std::size_t /*bytes_
     
     // parse client websocket message
     std::string message = beast::buffers_to_string(buffer_.data());
-    std::cout << "read: " << message << std::endl;
-	json data = json::parse(message);
-    GameManager& game_manager = GameManager::Instance();
     
-    // take to process according type
-    if (data["type"] == "robot") {
-        game_manager.JoinAIMatch(shared_from_this());
-    }
-    if (data["type"] == "ai") {
-        game_manager.HandleAI(data["roomid"]);
-    }
-    if (data["type"] == "match") {
-        game_manager.JoinMatch(shared_from_this());
-    }
-    if (data["type"] == "move") {
-        int roomid = data["roomid"];
-        int x = data["x"];
-        int y = data["y"];
-        game_manager.HandlePerson(roomid, shared_from_this(),  x, y);
-    }
+    GameManager& game_manager = GameManager::Instance();
+    game_manager.HandleMessage(message, shared_from_this());
 
-    // 清空 buffer，准备下一次读取
     buffer_.consume(buffer_.size());
     DoRead();
 }
 
-void WebSocketSession::DoWrite(const std::string& msg) {
+void WebSocketSession::DoWrite(std::string msg) {
     std::cout << "write: " << msg << std::endl;
-    ws_.text(true); // 文本帧
-    ws_.async_write(boost::asio::buffer(msg),
-        [self = shared_from_this()](boost::system::error_code ec, std::size_t bytes_transferred) {
-            self->OnWrite(ec, bytes_transferred);
-        });
+
+    boost::asio::post(
+            strand_, // 确保写操作串行执行
+            [self = shared_from_this(), msg = std::move(msg)] {
+                // When the queue is not empty, there is writing.
+                bool write_in_progress = !self->write_msgs_.empty();
+                self->write_msgs_.push_back(std::move(msg));
+                if (!write_in_progress) {
+                    self->DoWriteNext();
+                }
+            }
+    );
 }
 
-void WebSocketSession::OnWrite(boost::system::error_code ec, std::size_t /*bytes_transferred*/) {
+void WebSocketSession::DoWriteNext() {
+    ws_.text(true); // 文本帧
+    ws_.async_write(
+        boost::asio::buffer(write_msgs_.front()),
+        boost::asio::bind_executor(
+            strand_,
+            [self = shared_from_this()](boost::system::error_code ec, std::size_t bytes_transferred) {
+                self->OnWrite(ec, bytes_transferred);
+            }
+        )
+    );
+}
+
+void WebSocketSession::OnWrite(boost::system::error_code ec, std::size_t ) {
     if (ec) {
         std::cerr << "Write error: " << ec.message() << std::endl;
         Close();
+    }
+
+    write_msgs_.pop_front();
+        if (!write_msgs_.empty()) {
+            DoWriteNext();
     }
 }
 

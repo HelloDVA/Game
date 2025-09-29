@@ -10,6 +10,7 @@ class HttpProcess;
 class HttpRequest;
 class HttpResponse;
 class WebSocketSession;
+class IoContextPool;
 
 class GomokuServer {
     public:
@@ -19,7 +20,6 @@ class GomokuServer {
         void Start();    
 
         void OnMessage(const TcpConnectionPtr& conn, Buffer* buffer);
-        void OnWebSocketMessage(const TcpConnectionPtr& conn, Buffer* buffer);
         void OnConnection(const TcpConnectionPtr&);
         void OnClose();
 
@@ -31,4 +31,5 @@ class GomokuServer {
         };
 
         std::unique_ptr<TcpServer> server_;
+        std::unique_ptr<IoContextPool> context_pool_;
 };

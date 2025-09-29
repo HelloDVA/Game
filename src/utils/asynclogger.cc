@@ -193,4 +193,3 @@ void AsyncLogger::RollFile() {
   }
 }
 
-

@@ -30,6 +30,7 @@ public:
     ~TcpServer();
 
     void Start();
+    void Stop();
 
     void setconnectioncallback(const ConnectionCallback& cb) { connection_callback_ = cb; }
     void setmessagecallback(const MessageCallback& cb) { message_callback_ = cb; }

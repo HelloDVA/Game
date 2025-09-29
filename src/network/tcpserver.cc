@@ -1,7 +1,6 @@
 #include <unistd.h>
 
 #include <cassert>
-#include <iostream>
 #include <memory>
 
 #include "tcpserver.h"
@@ -17,21 +16,14 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& addr)
       started_(false),
       local_addr_(addr),
       acceptor_(std::make_unique<Acceptor>(loop, addr)),
-      thread_pool_(std::make_unique<EventLoopThreadPool>(loop, "IOthreadpool", 5)) {
+      thread_pool_(std::make_unique<EventLoopThreadPool>(loop, "IOthreadpool", 6)) {
     // Bind new connection callback for acceptor. 
     std::function<void(int, const InetAddress&)> cb = std::bind(&TcpServer::NewConnection, this, std::placeholders::_1, std::placeholders::_2);
     acceptor_->setnewconnectioncallback(cb);    
 }
 
 TcpServer::~TcpServer() {
-    loop_->AssertInLoopThread();
 
-    for (auto it : connections_) {
-        TcpConnection::TcpConnectionPtr conn = it.second;
-        conn->getloop()->RunInLoop([conn](){
-                conn->ConnectDestroyed();
-            });
-    }
 }
 
 void TcpServer::Start() {
@@ -41,8 +33,32 @@ void TcpServer::Start() {
 
     thread_pool_->Start();
 
-    loop_->RunInLoop([this](){
-            acceptor_->Listen();
+    acceptor_->Listen();
+}
+
+void TcpServer::Stop() {
+    // Cancle all acceptor epoll events.
+    loop_->RunInLoop([this]() {
+        acceptor_->ListenOff();
+    });
+
+    // Make sure all connections send ok.
+    for (auto it : connections_) {
+        TcpConnection::TcpConnectionPtr conn = it.second;
+        conn->getloop()->RunInLoop([conn](){
+            if (conn->IsConnected()) {
+                conn->Shutdown();
+            }
+        });
+    }
+    
+    // Close all sub-loop in threadpool.
+    thread_pool_->Stop();    
+    
+    // Close the main-loop.
+    loop_->RunInLoop([this]() {
+        loop_->Quit();  
+        started_ = false;
     });
 }
 
@@ -57,11 +73,12 @@ void TcpServer::NewConnection(int sockfd, const InetAddress& peer_addr) {
     connections_[conn_name] = conn;
     
     // Bind message and close callback function for new connection.
+    conn->setreadcallback(message_callback_);
     conn->setclosecallback([this](const TcpConnection::TcpConnectionPtr &conn) {
             CloseConnection(conn);
     });
-    conn->setreadcallback(message_callback_);
-
+    
+    // Main-loop to Sub-loop, wake up sub-loop to process the task.
     loop->RunInLoop([conn]() {
             conn->ConnectEstablished();
     });
@@ -75,8 +92,6 @@ void TcpServer::CloseConnection(const TcpConnection::TcpConnectionPtr& conn) {
 
 void TcpServer::CloseConnectionInLoop(const TcpConnection::TcpConnectionPtr& conn) {
    loop_->AssertInLoopThread(); 
-
-   std::cout << "tcp server 79 close connection" << std::endl;
 
    std::string name = conn->getname();
    ssize_t n = connections_.erase(name);

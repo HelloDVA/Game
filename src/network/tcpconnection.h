@@ -19,6 +19,7 @@
 class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
     public:
         using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
+
         using ReadCallback = std::function<void(const TcpConnectionPtr&, Buffer*)>;
         using WriteCallback = std::function<void(const TcpConnectionPtr&, Buffer*)>;
         using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
@@ -33,7 +34,6 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 
         // After tcpserver::NewConnection run.
         void ConnectEstablished();   
-
         // After tcpserver::CloseConnection run.
         void ConnectDestroyed();             
 
@@ -41,8 +41,11 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
         void Send(const std::string& message); 
         void Send(Buffer* message);
         void Shutdown();                     
-
+        
+        // Move the socket to websocket.
         void UpgradeWebSocket();
+
+        bool IsConnected() const { return state_ == kConnected; }
         
         // Get and Set methods.
         EventLoop* getloop() const { return loop_; }
@@ -50,7 +53,6 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
         const InetAddress& getlocaladdr() const { return local_addr_; }
         const InetAddress& getpeeraddr() const { return peer_addr_; }
         const int getsockfd() const { return channel_->getfd(); }
-        bool state() const { return state_ == kConnected; }
         void setreadcallback(ReadCallback cb) { read_callback_ = std::move(cb); }
         void setwritecallback(WriteCallback cb) { write_callback_ = std::move(cb); }
         void setclosecallback(CloseCallback cb) { close_callback_ = std::move(cb); }
@@ -84,8 +86,10 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
         InetAddress local_addr_;
         InetAddress peer_addr_;
         
-        Buffer input_buffer_;        // 接收缓冲区
-        Buffer output_buffer_;       // 发送缓冲区
+        Buffer input_buffer_;        
+        Buffer output_buffer_;      
+
+        bool upgrade_;
 };
 
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;

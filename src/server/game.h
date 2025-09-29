@@ -4,7 +4,8 @@
 
 class Game {
     public:
-        Game();
+        Game() {}
+        ~Game() {}
         bool MakeMove(int x, int y, int player);
         std::pair<int, int> AIMove();
         void Reset();
@@ -13,6 +14,7 @@ class Game {
         bool CheckWin(int x, int y, int player);
 
         std::vector<std::pair<int, int>> GetEmptyCells();
+
         // three diffculty AI
         std::pair<int, int> EasyAI();
         std::pair<int, int> MediumAI();

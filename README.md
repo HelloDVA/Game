@@ -1,44 +1,4 @@
-### 1、Network
-
-该项目是Linux系统下基于 epoll 与线程池开发的并发服务器，可以在此基础上实现不同的业务服务器，并配套了常用的工具类库。
-
-
-
-### 2、核心模块介绍（主从reactor 线程池）
-
-**channel：**对epoll中——的封装。简化接口并获得更丰富的功能。
-
-**epoller**：对epoll的poll、add、delete、modify操作进行封装。提高复用性与扩展性，并简化接口的使用。
-
-**事件循环**：
-
-##### acceptor
-
-1、创建服务器addr，创建非阻塞socket。
-
-2、利用base loop，bind、listen，服务器socket。
-
-3、创建channel，注册读事件，HandleRead处理，接受连接，调用tcpserver：：回调函数。
-
-4、使用channel，关闭事件，申请从epoll中移除自己。
-
-5、关闭socket。
-
-##### connection
-
-1、利用thread loop，acceptor提供的连接sockfd，创建channel。
-
-2、注册Read，Write，Close，Error事件，并建立对应的处理函数。
-
-3、配备读写缓冲区，读取，发送数据。
-
-4、根据不同事件处理，调用不同的tcpserver：：回调函数。
-
-6、服务器配备主动操作：发送数据，断开连接。
-
-
-
-### 3、五子棋服务器模块
+### 五子棋服务器模块
 
 #### 1. 整体设计
 
@@ -84,6 +44,11 @@ WebSocket 负责承载游戏对战的实时通信，使用 JSON格式进行消�
 
 
 
+#### Json数据
+
+
+
+type : "move"	x : x	y : y	roomid : roomid
 
 
 
@@ -112,35 +77,10 @@ WebSocket 负责承载游戏对战的实时通信，使用 JSON格式进行消�
 
 
 
-### 3、工具模块
-
-日志等工具模块
 
 
 
-### 4、测试
-
-#### wrk test
-
-Running 10s test @ http://127.0.0.1:8081
-12 threads and 400 connections
-Thread Stats   Avg      Stdev     Max   +/- Stdev
-   Latency   199.95ms   51.08ms 631.64ms   73.01%
-   Req/Sec   163.92     61.62   580.00     67.56%
-19595 requests in 10.06s, 1.89MB read
-Requests/sec:   1948.68
-
-#### Webbench测试
-
-![1000test](https://github.com/HelloDVA/Network/blob/main/1000test.png)
 
 
 
-### 5、主体架构图
-
-![主体架构](https://github.com/HelloDVA/Network/blob/main/network.png)
-
-Library
-libboost-all-dev
-nlohmann-json3-dev
 

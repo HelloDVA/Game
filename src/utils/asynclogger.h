@@ -8,7 +8,6 @@
 #include <thread>
 
 class AsyncLogger {
-
     public:
         AsyncLogger(const std::string& basename, 
                 size_t rollSize  = 1024*1024*1024,
@@ -44,3 +43,5 @@ class AsyncLogger {
         BufferPtr nextBuffer_;      // second buffer
         BufferVector buffers_;      //
 };
+
+
