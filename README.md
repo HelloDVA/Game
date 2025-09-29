@@ -40,11 +40,9 @@ GomokuServer 基于独立的 Network 模块（另一个项目），通过组合�
 
 表示一局五子棋对局。负责 落子逻辑、胜负判定，AI功能接口。
 
+#### 4、流程图
 
-
-
-
-
+![gameflow](https://github.com/HelloDVA/Game/blob/main/gameflow.png)
 
 
 
